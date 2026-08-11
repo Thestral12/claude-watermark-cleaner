@@ -1,152 +1,148 @@
-# Nettoyeur de watermark textuel Claude
+# Claude Text Watermark Cleaner
 
-> Projet expérimental et critique : ce dépôt cherche à démontrer qu'un
-> watermark statistique appliqué au texte est contournable et risque surtout de
-> provoquer davantage de calcul, de coût et de consommation énergétique.
+> An experimental and critical project: this repository aims to demonstrate
+> that statistical watermarks applied to text can be circumvented and are
+> likely to cause additional computation, cost, and energy consumption.
 
-## Pourquoi ce projet existe
+## Why This Project Exists
 
-Ce projet défend une thèse assumée : imposer un watermark statistique à du texte
-généré est une contrainte techniquement absurde. Une marque que l'on peut
-affaiblir en reformulant le texte ne constitue pas une preuve fiable de son
-origine. Elle crée en revanche une forte incitation à effectuer une seconde
-passe avec une autre IA.
+This project advances a deliberate argument: imposing a statistical watermark
+on generated text is a technically misguided constraint. A mark that can be
+weakened by rephrasing the text is not reliable proof of its origin. It does,
+however, create a strong incentive to run a second pass with another AI model.
 
-Le résultat prévisible est contre-productif :
+The predictable result is counterproductive:
 
-- davantage d'appels à des modèles uniquement pour contourner le marquage ;
-- plus de calcul, de latence et de dépenses pour produire le même contenu ;
-- des besoins énergétiques supplémentaires sans bénéfice fonctionnel pour
-  l'utilisateur ;
-- une course entre watermarking et réécriture, au lieu d'une transparence
-  réellement utile ;
-- un signal ambigu lorsqu'une personne utilise Claude pour corriger ou traduire
-  un texte qu'elle a elle-même écrit.
+- more model calls made solely to circumvent the watermark;
+- more computation, latency, and expense to produce the same content;
+- additional energy use with no functional benefit to the user;
+- an arms race between watermarking and rewriting instead of genuinely useful
+  transparency;
+- an ambiguous signal when someone uses Claude to edit or translate text they
+  wrote themselves.
 
-Autrement dit, la contrainte européenne risque d'obtenir l'inverse de l'effet
-recherché : elle ne supprimera pas les usages que ses utilisateurs veulent
-dissimuler, mais fera exploser les usages d'IA destinés à contourner la marque.
-Ce dépôt matérialise cette critique avec un outil volontairement simple.
+In other words, the European requirement risks producing the opposite of its
+intended effect: it will not prevent the uses that people want to conceal, but
+it will greatly increase the use of AI to circumvent the mark. This repository
+puts that criticism into practice with a deliberately simple tool.
 
-## Conclusion de l'analyse
+## Analysis Summary
 
-La nouvelle marque annoncée par Anthropic n'est pas décrite comme une simple
-suite de caractères Unicode cachés. Elle est appliquée **pendant la génération,
-au niveau du modèle**, puis voyage avec le texte lors d'un copier-coller. La
-documentation technique du détecteur n'est pas encore publiée.
+Anthropic's newly announced mark is not described as a simple sequence of
+hidden Unicode characters. It is applied **during generation, at the model
+level**, and remains with the text when it is copied and pasted. Technical
+documentation for the detector has not yet been published.
 
-La méthode exacte n'est donc pas publiquement vérifiable à ce jour. L'hypothèse
-technique la plus crédible est une signature statistique : le modèle favorise
-légèrement certains tokens parmi plusieurs choix valides, et le détecteur mesure
-ce biais sur un passage suffisamment long. Il s'agit ici d'une **inférence**, pas
-d'un détail confirmé par Anthropic. Elle correspond toutefois au fonctionnement
-publié de systèmes comparables comme SynthID Text. Dans ce cas :
+The exact method therefore cannot currently be verified publicly. The most
+plausible technical hypothesis is a statistical signature: the model slightly
+favors certain tokens among several valid choices, and the detector measures
+that bias over a sufficiently long passage. This is an **inference**, not a
+detail confirmed by Anthropic. It is, however, consistent with the published
+operation of comparable systems such as SynthID Text. In that case:
 
-- copier le texte dans un éditeur, l'imprimer ou faire de l'OCR ne change rien ;
-- supprimer les espaces invisibles ne suffit pas ;
-- une réécriture substantielle par un autre modèle perturbe la séquence de
-  tokens et constitue la contre-mesure simple la plus crédible ;
-- aucune suppression ne peut être garantie tant que le détecteur officiel et
-  ses seuils ne sont pas disponibles.
+- copying the text into an editor, printing it, or using OCR changes nothing;
+- removing invisible spaces is not enough;
+- substantial rewriting by another model disrupts the token sequence and is
+  the most credible simple countermeasure;
+- removal cannot be guaranteed until the official detector and its thresholds
+  are available.
 
-Sources :
+Sources:
 
-- [Documentation Anthropic sur le marquage](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content)
-- [Étude technique de la Commission européenne sur le texte généré](https://op.europa.eu/en/publication-detail/-/publication/6c981119-4829-11f1-8095-01aa75ed71a1/language-en)
-- [Fonctionnement et limites de SynthID Text](https://ai.google.dev/responsible/docs/safeguards/synthid)
+- [Anthropic documentation on watermarking](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content)
+- [European Commission technical study on generated text](https://op.europa.eu/en/publication-detail/-/publication/6c981119-4829-11f1-8095-01aa75ed71a1/language-en)
+- [How SynthID Text works and its limitations](https://ai.google.dev/responsible/docs/safeguards/synthid)
 
-## Solution livrée
+## Included Solution
 
-`clean_claude_watermark.py` réalise deux étapes :
+`clean_claude_watermark.py` performs two steps:
 
-1. suppression des caractères Unicode invisibles ou directionnels suspects ;
-2. reformulation contrôlée du texte par un modèle autre que Claude.
+1. removes suspicious invisible or bidirectional Unicode characters;
+2. rewrites the text in a controlled way using a model other than Claude.
 
-Le script protège les blocs de code, le code en ligne, les URL et les variables.
-Il refuse également une sortie si un nombre a changé. Il fonctionne uniquement
-avec la bibliothèque standard de Python.
+The script protects code blocks, inline code, URLs, and variables. It also
+rejects output if any number has changed. It uses only the Python standard
+library.
 
-### Moteurs utilisés et stratégie à venir
+### Current Engines and Future Strategy
 
-L'outil utilise actuellement **Ollama** et **Codex** :
+The tool currently supports **Ollama** and **Codex**:
 
-- en priorité, un modèle exécuté localement avec Ollama ;
-- à défaut, le CLI Codex déjà configuré sur la machine.
+- preferably, a model running locally with Ollama;
+- otherwise, the Codex CLI already configured on the machine.
 
-Ollama n'injecte actuellement pas de watermark par lui-même. Le comportement
-exact dépend néanmoins du modèle chargé. Codex est un fallback pratique, mais
-un service distant pourrait toujours faire évoluer sa politique de marquage.
+Ollama does not currently add a watermark itself, although the exact behavior
+depends on the model being used. Codex is a convenient fallback, but a remote
+service could change its watermarking policy at any time.
 
-Si Ollama, Codex ou les modèles utilisés ajoutent un watermark à l'avenir, le
-projet basculera vers un modèle open source dont la chaîne de génération est
-auditable et pour lequel le watermarking peut être explicitement désactivé. Pour
-une démonstration sans dépendance à un fournisseur distant, le mode Ollama avec
-un modèle open source est donc recommandé.
+If Ollama, Codex, or the selected models add a watermark in the future, the
+project will switch to an open-source model whose generation pipeline can be
+audited and for which watermarking can be explicitly disabled. For a
+demonstration that does not depend on a remote provider, Ollama mode with an
+open-source model is therefore recommended.
 
-## Utilisation
+## Usage
 
-Traiter un fichier :
+Process a file:
 
 ```bash
-python3 clean_claude_watermark.py texte.md -o texte-nettoye.md
+python3 clean_claude_watermark.py text.md -o cleaned-text.md
 ```
 
-Traiter directement le presse-papiers macOS :
+Process the macOS clipboard directly:
 
 ```bash
 python3 clean_claude_watermark.py --clipboard
 ```
 
-Utiliser explicitement un modèle Ollama local :
+Explicitly use a local Ollama model:
 
 ```bash
-python3 clean_claude_watermark.py texte.md -o texte-nettoye.md \
+python3 clean_claude_watermark.py text.md -o cleaned-text.md \
   --engine ollama --model qwen3:8b
 ```
 
-Le mode par défaut effectue jusqu'à deux tentatives et conserve la plus forte. Il
-s'arrête après la première si au moins 70 % des séquences de cinq tokens ont déjà
-été perturbées. Pour limiter le traitement à une tentative :
+By default, the tool makes up to two attempts and keeps the stronger result. It
+stops after the first attempt if at least 70% of five-token sequences have
+already been disrupted. To limit processing to one attempt:
 
 ```bash
-python3 clean_claude_watermark.py texte.md -o texte-nettoye.md --passes 1
+python3 clean_claude_watermark.py text.md -o cleaned-text.md --passes 1
 ```
 
-Ne retirer que d'éventuels caractères invisibles, sans reformuler :
+Remove only possible invisible characters without rewriting:
 
 ```bash
-python3 clean_claude_watermark.py texte.md -o texte-normalise.md --engine clean
+python3 clean_claude_watermark.py text.md -o normalized-text.md --engine clean
 ```
 
-Le script affiche sur la sortie d'erreur le moteur utilisé, le nombre de
-caractères invisibles retirés et le taux de variation lexicale. Une variation
-des séquences de cinq tokens inférieure à 60 % déclenche un avertissement.
+The script reports the selected engine, the number of invisible characters
+removed, and the lexical change rate to standard error. It emits a warning when
+fewer than 60% of five-token sequences have been disrupted.
 
 ## Tests
 
-Le projet n'utilise aucune dépendance Python externe. La suite de tests se lance
-avec :
+The project has no external Python dependencies. Run the test suite with:
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-## Limites
+## Limitations
 
-- La réussite ne pourra être mesurée objectivement qu'après publication du
-  détecteur Anthropic.
-- Une réécriture peut changer une nuance malgré les contrôles. Une relecture
-  humaine reste nécessaire pour un texte contractuel, médical, juridique ou
-  financier.
-- Le mode Codex envoie le texte au service configuré par le CLI Codex. Pour un
-  document confidentiel, utiliser Ollama local.
-- Retirer une marque ne dispense pas de respecter les règles de transparence ou
-  d'attribution applicables au contexte de publication.
+- Success cannot be measured objectively until Anthropic publishes its
+  detector.
+- Rewriting can alter a nuance despite the safeguards. Human review remains
+  necessary for contractual, medical, legal, or financial text.
+- Codex mode sends the text to the service configured for the Codex CLI. Use
+  local Ollama for confidential documents.
+- Removing a mark does not remove the obligation to comply with transparency
+  or attribution rules that apply in the publishing context.
 
-## Position du projet
+## Project Position
 
-Cet outil n'affirme pas qu'un texte réécrit devient humain. Il montre qu'un
-watermark probabiliste n'est pas un mécanisme robuste de preuve ou
-d'attribution face à un utilisateur motivé. La provenance utile devrait reposer
-sur des mécanismes explicites, vérifiables et proportionnés, pas sur une
-contrainte qui pousse mécaniquement à consommer une seconde inférence.
+This tool does not claim that rewritten text becomes human-authored. It shows
+that a probabilistic watermark is not a robust mechanism for proof or
+attribution when facing a motivated user. Useful provenance should rely on
+explicit, verifiable, and proportionate mechanisms—not on a constraint that
+mechanically drives the use of a second inference.
